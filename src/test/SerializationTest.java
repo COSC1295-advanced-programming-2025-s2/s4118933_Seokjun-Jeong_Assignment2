@@ -39,21 +39,21 @@ public class SerializationTest {
 
         CareHome loaded = CareHome.loadFromFile(saveFile);
 
-        // 같은 객체가 아님을 확인
+        // check not same
         assertNotSame(original, loaded);
 
-        // 스태프 수/타입 보존 확인
+        // check the number of staff and type
         assertEquals(
                 original.staff().findAll().size(),
                 loaded.staff().findAll().size(),
                 "staff count should match after load");
 
-        // 하루치 로스터 엔트리 수 보존 확인 (예: MONDAY)
+        // check the number of entry roaster in a day(for example: MONDAY)
         int originalMon = original.roster().get(DayOfWeek.MONDAY).size();
         int loadedMon   = loaded.roster().get(DayOfWeek.MONDAY).size();
         assertEquals(originalMon, loadedMon, "monday roster size should match");
 
-        // 최소한 기대 엔트리(간호사 2 + 의사 1 = 3)가 존재하는지 sanity check
+        // minimum entry(nurse 2 + doctor 1 = 3) sanity check
         assertTrue(loadedMon >= 3, "expected at least 3 assignments on Monday");
     }
 

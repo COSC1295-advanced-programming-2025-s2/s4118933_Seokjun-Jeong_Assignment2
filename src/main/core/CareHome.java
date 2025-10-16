@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class CareHome implements Serializable {
     private static final long serialVersionUID = 1L;
-    private final Repository<Staff, String> staffRepo; // Staff 상위 타입 호환을 위해 Object 사용
+    private final Repository<Staff, String> staffRepo;
     private final Roster roster;
     private final java.util.List<main.model.Ward> wards = new java.util.ArrayList<>();
     public java.util.List<main.model.Ward> wards(){ return wards; }
@@ -29,7 +29,7 @@ public class CareHome implements Serializable {
     public Roster roster(){ return roster; }
 
     public void checkCompliance(){
-        // 매일 간호사 Morning/Evening 커버
+        // nurse Morning/Evening cover everday
         for (DayOfWeek d : DayOfWeek.values()){
             var todays = roster.get(d).stream().filter(a -> a.role()==Role.NURSE).collect(Collectors.toList());
             boolean hasMorning = todays.stream().anyMatch(a -> a.type()==ShiftType.MORNING);
@@ -37,7 +37,7 @@ public class CareHome implements Serializable {
             if (!hasMorning || !hasEvening)
                 throw new ComplianceViolationException("Nurse coverage missing on " + d);
         }
-        // 간호사 하루 8시간 초과 금지
+        // not allow more than 8 hours
         for (DayOfWeek d : DayOfWeek.values()){
             Map<String,Integer> hours = new HashMap<>();
             for (ShiftAssignment a : roster.get(d)){
@@ -48,7 +48,7 @@ public class CareHome implements Serializable {
                     throw new ComplianceViolationException("Nurse "+e.getKey()+" exceeds 8h on "+d);
             }
         }
-        // 매일 의사 최소 1회 배정
+        // see doctor at least once in a day
         for (DayOfWeek d : DayOfWeek.values()){
             boolean hasDoctor = roster.get(d).stream().anyMatch(a -> a.role()==Role.DOCTOR);
             if (!hasDoctor) throw new ComplianceViolationException("No doctor assigned on " + d);

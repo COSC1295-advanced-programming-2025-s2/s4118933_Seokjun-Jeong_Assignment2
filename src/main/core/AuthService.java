@@ -19,7 +19,7 @@ public class AuthService {
         if (s.getRole() != role)
             throw new UnauthorizedActionException("Requires role: " + role);
 
-        // TODO: 나중에 Roster 연동해서 당일 근무 확인
+        // TODO: integrate with roster later to verify on-duty staff current day
         boolean rostered = true;
         if (!rostered)
             throw new NotRosteredException("Not rostered at " + LocalDateTime.now());

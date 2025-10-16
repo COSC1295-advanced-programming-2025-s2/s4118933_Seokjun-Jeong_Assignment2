@@ -10,7 +10,7 @@ import javafx.stage.Stage;
 import main.core.*;
 import main.core.AdmissionService;
 import main.core.CareHome;
-import main.core.Roster; // 기존
+import main.core.Roster; // present
 import main.model.*;
 import main.repo.InMemoryRepository;
 
@@ -19,7 +19,7 @@ public class MainFX extends Application {
     private final AdmissionService admission = new AdmissionService();
     private Stage stage;
     private BorderPane root;
-    // 권한/로그 세션 초기화
+    // Initialize authorization and logging session
     private Session session = new Session();
     private AuthService auth = new AuthService(session);
     private LogService logs = LogService.load(new java.io.File("carehome.log"));
@@ -39,24 +39,24 @@ public class MainFX extends Application {
         } catch (Exception ignore) {}
 
         this.stage = stage;
-        // CareHome 초기화
+        // CareHome Initialize
         var repo = new InMemoryRepository<Staff,String>(Staff::getId);
         home = new CareHome(repo, new Roster());
 
-        // 2 Wards × 6 Rooms, 방당 침대 수(예시): 1,2,4,4,4,3
+        // 2 Wards × 6 Rooms, the number of beds on per room: 1,2,4,4,4,3
         home.addWard(new Ward("W1", new int[]{1,2,4,4,4,3}));
         home.addWard(new Ward("W2", new int[]{2,2,4,4,3,3}));
 
         root = new BorderPane();
         root.setPadding(new Insets(12));
 
-        // 좌측: Ward 레이아웃
+        // Left: Ward layout
         HBox wardsBox = new HBox(24);
         wardsBox.setAlignment(Pos.TOP_CENTER);
         for (Ward w : home.wards()) wardsBox.getChildren().add(buildWardPane(w));
         root.setCenter(wardsBox);
 
-        // 상단: 메뉴 바 (간단)
+        // Top: Menu Bar
         MenuBar mb = new MenuBar();
         Menu residentMenu = new Menu("Resident");
         MenuItem add = new MenuItem("Add to vacant bed…");
@@ -76,7 +76,7 @@ public class MainFX extends Application {
         viewPres.setOnAction(e -> showPrescriptionDialog());
         presMenu.getItems().add(viewPres);
 
-        // 기존 mb.getMenus().addAll(account, residentMenu, logsMenu);
+        // present mb.getMenus().addAll(account, residentMenu, logsMenu);
         mb.getMenus().add(presMenu);
 
 
@@ -134,7 +134,7 @@ public class MainFX extends Application {
         });
 
         dlg.showAndWait().ifPresent(staff -> {
-            // 로그인 세션 설정
+            // logging session setting
             session.signIn(staff);
             statusBar.setText("Signed in: " + staff.getName() + " (" + staff.getRole() + ")");
             logs.log(staff.getId(), "SIGN_IN", staff.getRole().toString());
@@ -157,7 +157,7 @@ public class MainFX extends Application {
         for (Room room : ward.getRooms()){
             VBox roomBox = buildRoomBox(room);
             grid.add(roomBox, c, r);
-            c++; if (c==2){ c=0; r++; } // 2열 × 3행 배치
+            c++; if (c==2){ c=0; r++; } // 2 x 3 layout
         }
         box.getChildren().add(grid);
         return box;
@@ -188,10 +188,10 @@ public class MainFX extends Application {
         btn.setOnAction(e -> {
             Resident occ = bed.getOccupant();
             if (occ == null){
-                // 빈 침대 → 입소 다이얼로그
+                // empty bed → add resident
                 showAddResidentDialog(room, bed);
             } else {
-                // 점유 중 → 상세/이동 메뉴
+                // occupied → show menu
                 showOccupiedMenu(room, bed, occ, btn);
             }
         });
@@ -207,13 +207,13 @@ public class MainFX extends Application {
         }
     }
 
-    // 전체 메뉴에서 “Add to vacant bed…”
+    // “Add to vacant bed…” in whole menu
     private void showAddResidentDialog(){
         Alert info = new Alert(Alert.AlertType.INFORMATION, "빈 침대를 클릭해서 입소할 수 있어요.", ButtonType.OK);
         info.setHeaderText(null); info.showAndWait();
     }
 
-    // 특정 침대에 바로 입소
+    // add resident in bed
     private void showAddResidentDialog(Room room, Bed bed){
         Dialog<Resident> dlg = new Dialog<>();
         dlg.setTitle("Add Resident → " + bed.getBedId());
@@ -236,7 +236,7 @@ public class MainFX extends Application {
         dlg.showAndWait().ifPresent(res -> {
             try{
                 admission.assign(res, room, bed);
-                // 버튼 색 갱신
+                // refresh button's color
                 refreshAllBeds();
             } catch (RuntimeException ex){
                 new Alert(Alert.AlertType.ERROR, ex.getMessage(), ButtonType.OK).showAndWait();
@@ -259,7 +259,7 @@ public class MainFX extends Application {
     }
 
     private void showMoveDialog(Resident r){
-        // 아주 간단한 선택 창: 첫 번째 비어있는 침대로 이동
+        // move to the first empty bed one
         for (Ward w : home.wards()){
             for (Room room : w.getRooms()){
                 for (Bed b : room.getBeds()){
@@ -270,7 +270,7 @@ public class MainFX extends Application {
                             new Alert(Alert.AlertType.INFORMATION,
                                     "Moved " + r.getName() + " → " + b.getBedId(), ButtonType.OK).showAndWait();
                             return;
-                        } catch (RuntimeException ignore){ /* 성별 충돌 등은 다음 후보로 */ }
+                        } catch (RuntimeException ignore){ /* gender accident */ }
                     }
                 }
             }
@@ -288,13 +288,13 @@ public class MainFX extends Application {
     }
 
     private void refreshAllBeds(){
-        // 간단히 전체 Scene을 다시 그리기 (Phase 2 초기이므로 OK)
+        // sketch
         root.setCenter(buildWardsPane());
     }
 
     private void showAddStaffDialog() {
         try {
-            // Manager 권한만 허용
+            // allow Manager authorization
             auth.require(main.model.Role.MANAGER);
         } catch (RuntimeException ex) {
             new Alert(Alert.AlertType.ERROR, ex.getMessage(), ButtonType.OK).showAndWait();
@@ -341,7 +341,7 @@ public class MainFX extends Application {
         });
 
         dlg.showAndWait().ifPresent(staff -> {
-            home.staff().save(staff);  // CareHome의 staff repository 저장
+            home.staff().save(staff);  // save CareHome staff repository
             logs.log(session.current().getId(), "ADD_STAFF",
                     staff.getId() + "(" + staff.getRole() + ")");
             new Alert(Alert.AlertType.INFORMATION,
@@ -351,7 +351,7 @@ public class MainFX extends Application {
     }
 
     private void showPrescriptionDialog() {
-        // 병상에 입소한 환자 목록 불러오기
+        // load the list of patients addmitted to beds
         ChoiceDialog<Resident> dialog = new ChoiceDialog<>();
         for (Ward w : home.wards())
             for (Room r : w.getRooms())
@@ -372,11 +372,11 @@ public class MainFX extends Application {
         Dialog<Void> dlg = new Dialog<>();
         dlg.setTitle("Prescriptions for " + res.getName());
 
-        // 목록
+        // List
         ListView<Prescription> list = new ListView<>();
         list.getItems().addAll(prescriptions.getFor(res));
 
-        // Doctor 전용 - 처방 추가 버튼
+        // Doctor  - add prescription button
         Button addBtn = new Button("Add Prescription");
         addBtn.setOnAction(e -> {
             try {
@@ -404,7 +404,7 @@ public class MainFX extends Application {
             });
         });
 
-        // Nurse 전용 - 투약 완료 버튼
+        // Nurse - mark administered button
         Button adminBtn = new Button("Mark Administered");
         adminBtn.setOnAction(e -> {
             try {

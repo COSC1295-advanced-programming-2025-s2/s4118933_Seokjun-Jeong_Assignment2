@@ -8,7 +8,7 @@ public class Ward implements Serializable {
     private final String wardId;
     private final List<Room> rooms = new ArrayList<>();
 
-    public Ward(String wardId, int[] bedCountsPerRoom){ // length=6 가정
+    public Ward(String wardId, int[] bedCountsPerRoom){ // if length=6
         this.wardId = wardId;
         for(int i=0;i<bedCountsPerRoom.length;i++){
             rooms.add(new Room(wardId + "-R" + (i+1), bedCountsPerRoom[i]));

@@ -6,7 +6,7 @@ import main.model.*;
 
 public class AdmissionService {
 
-    // 같은 방 안의 입원자 성별을 통일(단순 규칙). 필요시 격리 룸은 예외처리 확장.
+    // same gender in same room
     public void assign(Resident r, Room room, Bed bed){
         if (bed.isOccupied()) throw new BedOccupiedException("Bed occupied: " + bed.getBedId());
 

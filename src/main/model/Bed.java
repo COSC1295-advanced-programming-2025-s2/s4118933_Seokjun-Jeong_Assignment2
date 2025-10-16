@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class Bed implements Serializable {
     private static final long serialVersionUID = 1L;
     private final String bedId;
-    private Resident occupant; // null이면 비어있음
+    private Resident occupant; // if null, empty
 
     public Bed(String bedId){ this.bedId = bedId; }
     public String getBedId(){ return bedId; }
