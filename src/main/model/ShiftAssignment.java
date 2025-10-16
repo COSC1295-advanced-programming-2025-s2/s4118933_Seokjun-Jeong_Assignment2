@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.DayOfWeek;
 
 public class ShiftAssignment implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final String staffId;
     private final Role role;
     private final DayOfWeek day;

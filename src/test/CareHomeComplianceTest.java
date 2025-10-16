@@ -1,5 +1,3 @@
-package test;
-
 import main.core.*;
 import main.core.CareHome;
 import main.core.Roster;
@@ -15,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CareHomeComplianceTest {
 
     private CareHome compliantHome(){
-        var repo = new InMemoryRepository<Object,String>(o -> ((Staff)o).getId());
+        var repo = new InMemoryRepository<Staff, String>(Staff::getId);
         Nurse n1 = new Nurse("N1","Alice","alice","hash");
         Nurse n2 = new Nurse("N2","Bob","bob","hash");
         Doctor d1 = new Doctor("D1","DrKim","kim","hash");

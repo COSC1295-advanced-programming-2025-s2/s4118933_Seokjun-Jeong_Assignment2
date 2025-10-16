@@ -6,6 +6,7 @@ import java.time.DayOfWeek;
 import java.util.*;
 
 public class Roster implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final Map<DayOfWeek, List<ShiftAssignment>> byDay = new EnumMap<>(DayOfWeek.class);
     public Roster(){ for (DayOfWeek d : DayOfWeek.values()) byDay.put(d, new ArrayList<>()); }
     public void assign(ShiftAssignment a){ byDay.get(a.day()).add(a); }

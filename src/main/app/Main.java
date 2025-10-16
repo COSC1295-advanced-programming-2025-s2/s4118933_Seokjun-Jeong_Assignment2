@@ -14,9 +14,7 @@ public class Main {
     private static final File SAVE = new File("carehome.dat");
 
     public static void main(String[] args) {
-        var repo = new InMemoryRepository<Object,String>(o -> {
-            if (o instanceof Staff s) return s.getId(); else return o.toString();
-        });
+        var repo = new InMemoryRepository<Staff, String>(Staff::getId);
         CareHome home = new CareHome(repo, new Roster());
         Scanner sc = new Scanner(System.in);
         while(true){

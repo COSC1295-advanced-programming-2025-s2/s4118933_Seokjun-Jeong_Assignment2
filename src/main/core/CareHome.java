@@ -5,6 +5,7 @@ import main.exceptions.PersistenceException;
 import main.model.Role;
 import main.model.ShiftAssignment;
 import main.model.ShiftType;
+import main.model.Staff;
 import main.repo.Repository;
 
 import java.io.*;
@@ -13,13 +14,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CareHome implements Serializable {
-    private final Repository<Object,String> staffRepo; // Staff 상위 타입 호환을 위해 Object 사용
+    private static final long serialVersionUID = 1L;
+    private final Repository<Staff, String> staffRepo; // Staff 상위 타입 호환을 위해 Object 사용
     private final Roster roster;
+    private final java.util.List<main.model.Ward> wards = new java.util.ArrayList<>();
+    public java.util.List<main.model.Ward> wards(){ return wards; }
+    public void addWard(main.model.Ward w){ wards.add(w); }
 
-    public CareHome(Repository<Object,String> staffRepo, Roster roster){
-        this.staffRepo = staffRepo; this.roster = roster;
+    public CareHome(Repository<Staff,String> staffRepo, Roster roster){
+        this.staffRepo = staffRepo;
+        this.roster = roster;
     }
-    public Repository<Object,String> staff(){ return staffRepo; }
+    public Repository<Staff,String> staff(){ return staffRepo; }
     public Roster roster(){ return roster; }
 
     public void checkCompliance(){
