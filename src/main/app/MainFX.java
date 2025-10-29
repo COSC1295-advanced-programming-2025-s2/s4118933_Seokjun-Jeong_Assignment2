@@ -26,7 +26,6 @@ public class MainFX extends Application {
     private PrescriptionService prescriptions = new PrescriptionService();
     private Label statusBar = new Label("Not signed in");
 
-
     @Override
     public void start(Stage stage) {
         try {
@@ -39,47 +38,44 @@ public class MainFX extends Application {
         } catch (Exception ignore) {}
 
         this.stage = stage;
-        // CareHome Initialize
+
+        // Initialize
         var repo = new InMemoryRepository<Staff,String>(Staff::getId);
         home = new CareHome(repo, new Roster());
 
-        // 2 Wards × 6 Rooms, the number of beds on per room: 1,2,4,4,4,3
+        // Testing
+        // home.staff().save(new Doctor("D001", "Dr. Kim", "drkim", "1234"));
+        // home.staff().save(new Nurse("N001", "Nurse Lee", "nlee", "abcd"));
+
+        // layout
         home.addWard(new Ward("W1", new int[]{1,2,4,4,4,3}));
         home.addWard(new Ward("W2", new int[]{2,2,4,4,3,3}));
 
         root = new BorderPane();
         root.setPadding(new Insets(12));
 
-        // Left: Ward layout
         HBox wardsBox = new HBox(24);
         wardsBox.setAlignment(Pos.TOP_CENTER);
         for (Ward w : home.wards()) wardsBox.getChildren().add(buildWardPane(w));
         root.setCenter(wardsBox);
 
-        // Top: Menu Bar
+        // --- Menubar ---
         MenuBar mb = new MenuBar();
+
+        // Resident
         Menu residentMenu = new Menu("Resident");
         MenuItem add = new MenuItem("Add to vacant bed…");
         add.setOnAction(e -> showAddResidentDialog());
         residentMenu.getItems().addAll(add);
-        mb.getMenus().add(residentMenu);
-        root.setTop(mb);
 
-        stage.setTitle("RMIT Care Home – Phase 2");
-        stage.setScene(new Scene(root, 1100, 700));
-        stage.show();
-
-        Menu account = new Menu("Account");
-
+        // Prescription
         Menu presMenu = new Menu("Prescription");
         MenuItem viewPres = new MenuItem("View / Add Prescription…");
         viewPres.setOnAction(e -> showPrescriptionDialog());
         presMenu.getItems().add(viewPres);
 
-        // present mb.getMenus().addAll(account, residentMenu, logsMenu);
-        mb.getMenus().add(presMenu);
-
-
+        // Account
+        Menu account = new Menu("Account");
         MenuItem signIn = new MenuItem("Sign in…");
         signIn.setOnAction(e -> showSignInDialog());
 
@@ -87,14 +83,38 @@ public class MainFX extends Application {
         signOut.setOnAction(e -> {
             session.signOut();
             statusBar.setText("Not signed in");
+            logs.log("SYSTEM", "SIGN_OUT", "User signed out");
         });
 
         MenuItem addStaff = new MenuItem("Add staff…");
-        addStaff.setOnAction(e -> showAddStaffDialog());  // 새 다이얼로그 호출
-        statusBar.setPadding(new Insets(6));
-        root.setBottom(statusBar);
+        addStaff.setOnAction(e -> showAddStaffDialog());
+
         account.getItems().addAll(signIn, signOut, new SeparatorMenuItem(), addStaff);
+
+        // set MenuBar
+        mb.getMenus().addAll(account, residentMenu, presMenu);
+        root.setTop(mb);
+
+        // bottom menubar
+        statusBar.setPadding(new Insets(6));
+        if (statusBar.getText() == null || statusBar.getText().isEmpty()) {
+            statusBar.setText("Not signed in");
+        }
+        root.setBottom(statusBar);
+
+        // show
+        stage.setTitle("RMIT Care Home – Phase 2");
+        stage.setScene(new Scene(root, 1100, 700));
+        stage.show();
+
+        System.out.println("==== ACTION LOGS ====");
+        for (var entry : logs.entries()) {
+            System.out.println(entry);
+        }
+        // ToolBar tb = new ToolBar(btnSignIn, btnSignOut);
+        // root.setTop(new VBox(mb, tb));
     }
+
 
     private void showSignInDialog() {
         Dialog<main.model.Staff> dlg = new Dialog<>();
@@ -252,20 +272,21 @@ public class MainFX extends Application {
                 ButtonType.OK).showAndWait());
 
         MenuItem move = new MenuItem("Move to another bed…");
-        move.setOnAction(e -> showMoveDialog(occ));
+        move.setOnAction(e -> showMoveDialog(room,bed, occ));
 
         menu.getItems().addAll(detail, move);
         menu.show(btn, javafx.geometry.Side.RIGHT, 0, 0);
     }
 
-    private void showMoveDialog(Resident r){
+    private void showMoveDialog(Room fromRoom, Bed fromBed, Resident r){
         // move to the first empty bed one
         for (Ward w : home.wards()){
             for (Room room : w.getRooms()){
                 for (Bed b : room.getBeds()){
                     if (!b.isOccupied()){
                         try{
-                            admission.move(room, b, r);
+                            admission.move(fromBed, room, b, r);
+                            fromBed.vacate();
                             refreshAllBeds();
                             new Alert(Alert.AlertType.INFORMATION,
                                     "Moved " + r.getName() + " → " + b.getBedId(), ButtonType.OK).showAndWait();
